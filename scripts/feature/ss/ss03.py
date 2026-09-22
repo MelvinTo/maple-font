@@ -1,5 +1,5 @@
 from scripts.feature import ast
-from scripts.feature.calt.tag import built_in_tag_text
+from scripts.feature.calt.tag import built_in_tag_text, space_tag_text, tag_space
 
 
 def ss03_subst():
@@ -32,6 +32,11 @@ def ss03_subst():
                 desc=f"[{text}]",
             )
         )
+
+    # Any-case variant of the space-delimited tags (` error `, ` Error `, ...),
+    # to match the any-case bracket tags above.
+    result += tag_space(space_tag_text, any_case=True)
+
     return result
 
 

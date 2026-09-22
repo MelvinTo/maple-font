@@ -1684,6 +1684,17 @@ feature calt {
     sub @F' @I @X @M @E parenright parenright by SPC;
   } tag_fixme_alt;
 
+  #  ERROR
+  lookup space_tag_error {
+    sub circle_start.bg E.bg R.bg R.bg O.bg R.bg @Space' by circle_end.bg;
+    sub circle_start.bg E.bg R.bg R.bg O.bg R' @Space by R.bg;
+    sub circle_start.bg E.bg R.bg R.bg O' R @Space by O.bg;
+    sub circle_start.bg E.bg R.bg R' O R @Space by R.bg;
+    sub circle_start.bg E.bg R' R O R @Space by R.bg;
+    sub circle_start.bg E' R R O R @Space by E.bg;
+    sub @Space' E R R O R @Space by circle_start.bg;
+  } space_tag_error;
+
 } calt;
 
 feature cv01 {
@@ -2566,6 +2577,17 @@ feature ss03 {
     sub SPC @C' @R @I @T @I @C @A @L bracketright by SPC;
     sub bracketleft' @C @R @I @T @I @C @A @L bracketright by SPC;
   } tag_critical.liga.ss03;
+
+  #  ERROR
+  lookup space_tag_error.ss03 {
+    sub circle_start.bg E.bg R.bg R.bg O.bg R.bg @Space' by circle_end.bg;
+    sub circle_start.bg E.bg R.bg R.bg O.bg @R' @Space by R.bg;
+    sub circle_start.bg E.bg R.bg R.bg @O' @R @Space by O.bg;
+    sub circle_start.bg E.bg R.bg @R' @O @R @Space by R.bg;
+    sub circle_start.bg E.bg @R' @R @O @R @Space by R.bg;
+    sub circle_start.bg @E' @R @R @O @R @Space by E.bg;
+    sub @Space' @E @R @R @O @R @Space by circle_start.bg;
+  } space_tag_error.ss03;
 
 } ss03;
 

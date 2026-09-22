@@ -50,7 +50,9 @@ class Lookup:
         arr = []
 
         if self.desc:
-            arr.append(Line(f"# {self.desc}"))
+            # rstrip so a desc with trailing spaces (e.g. " ERROR ") does not
+            # emit a comment with trailing whitespace and fail `git diff --check`
+            arr.append(Line(f"# {self.desc}".rstrip()))
 
         arr.append(Line(f"lookup {self.name} {{"))
 
