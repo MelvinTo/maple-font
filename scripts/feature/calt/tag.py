@@ -25,6 +25,11 @@ built_in_tag_text = [
     "critical",
 ]
 
+# Tag words that also get the space-delimited badge (` ERROR `), in addition to
+# the bracket form (`[ERROR]`). Shared by calt (uppercase-only) and ss03
+# (any-case) so the two stay in sync.
+space_tag_text = ["error"]
+
 
 def tag_upper(text_list: list[str]):
     """
@@ -229,6 +234,80 @@ def tag_custom(
     return result
 
 
+def tag_space(text_list: list[str], any_case: bool = False):
+    """
+    Generate space-delimited tag lookup.
+
+    Like the built-in bracket tags (``[ERROR]``) but triggered by a surrounding
+    space on each side (`` ERROR ``). The two spaces become the badge end-caps
+    (rendered as ``circle_start.bg`` / ``circle_end.bg``) and each letter is
+    swapped for its knockout ``.bg`` glyph, so `` ERROR `` renders as a filled
+    rounded badge.
+
+    By default matching is uppercase-only, matching the built-in ``[ERROR]``
+    tag (lowercase `` error `` is left untouched). With ``any_case=True`` the
+    source letters use letter classes so any casing matches; that variant is
+    emitted inside ``ss03`` ("allow any case in all tags"), mirroring how the
+    bracket tags gain case-insensitive matching there.
+
+    Note: the badge needs a space on both sides, so two badges that share a
+    single separator (`` ERROR ERROR ``) render only the first -- one space
+    glyph cannot be both the end-cap and the next start-cap. Separate them with
+    any other token or a second space (`` ERROR  ERROR ``) to badge both. As
+    with the bracket tags, an active ``cvXX`` that reshapes a lowercase letter
+    (e.g. ``cv08`` -> ``r.cv08``) suppresses the ``ss03`` any-case match.
+
+    Args:
+        text_list (list[str]): tag words (must be in ``built_in_tag_text``).
+        any_case (bool): match letters in any case (the ``ss03`` variant).
+
+    Returns:
+        list[ast.Lookup]: one Lookup per word, named ``space_tag_{word}`` (with
+            a ``.ss03`` suffix for the any-case variant).
+    """
+    result = []
+    for text in text_list:
+        text = text.lower()
+        if text not in built_in_tag_text:
+            raise Exception(
+                f"space tag must be in {built_in_tag_text}, but '{text}' is not"
+            )
+
+        upper = text.upper()
+        # Source letters: literal uppercase glyphs (default) or letter classes
+        # that match any case (`ss03`).
+        letters = [f"@{g}" for g in upper] if any_case else list(upper)
+        # Source: space, <letters>, space
+        source_list: list[str | ast.Clazz] = [cls_space, *letters, cls_space]
+        # Target: circle cap, <letter .bg glyphs>, circle cap
+        target_list = ["circle_start.bg", *(f"{g}.bg" for g in upper), "circle_end.bg"]
+
+        length = len(source_list)
+
+        # Generate substitutions in reverse order (from last glyph to first),
+        # mirroring `tag_custom`: backtrack is the already-substituted `.bg`
+        # prefix, lookahead is the still-untouched source suffix.
+        subst_list = [
+            ast.subst(
+                target_list[: i - 1],
+                source_list[i - 1],
+                source_list[i:] if i < length else None,
+                target_list[i - 1],
+            )
+            for i in range(length, 0, -1)
+        ]
+
+        result.append(
+            ast.Lookup(
+                name=f"space_tag_{text}.ss03" if any_case else f"space_tag_{text}",
+                desc=f" {upper} ",
+                content=subst_list,
+            )
+        )
+
+    return result
+
+
 def tag_suffix_colon(text_list: list[str]):
     result = []
     for text in text_list:
@@ -285,6 +364,12 @@ def get_lookup(cls_var: ast.Clazz):
             ],
             bg_cls_dict,
         ),
+        # =========================================================
+        #                    Space-delimited tags
+        #        type ` ERROR ` (a space on both sides) to get the
+        #        same filled badge as the built-in `[ERROR]` tag
+        # ---------------------------------------------------------
+        tag_space(space_tag_text),
         # =========================================================
         #                Mark annotation in Xcode
         #             example: `// TODO: code review`
